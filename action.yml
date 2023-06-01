@@ -100,6 +100,10 @@ inputs:
 outputs:
   pull_request_urls:
     description: 'The URLs to the created Pull Requests as an array'
+  changed_files:
+    description: 'The changed files'
+  git_diff:
+    description: 'The git diff'
 
 runs:
   using: 'node16'

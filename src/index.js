@@ -2,9 +2,9 @@ import * as core from '@actions/core'
 import * as fs from 'fs'
 
 import Git from './git.js'
-import { forEach, dedent, addTrailingSlash, pathIsDirectory, copy, remove, arrayEquals } from './helpers.js'
+import {addTrailingSlash, arrayEquals, copy, dedent, forEach, pathIsDirectory, remove} from './helpers.js'
 
-import { parseConfig, default as config } from './config.js'
+import {default as config, parseConfig} from './config.js'
 
 const {
 	COMMIT_EACH_FILE,
@@ -30,6 +30,8 @@ async function run() {
 	const repos = await parseConfig()
 
 	const prUrls = []
+
+	const diffs = []
 
 	await forEach(repos, async (item) => {
 		core.info(`Repository Info`)
@@ -60,10 +62,13 @@ async function run() {
 
 			// Loop through all selected files of the source repo
 			await forEach(item.files, async (file) => {
+				core.info(`Adding file ${ file.source } to local repository`)
+
 				const fileExists = fs.existsSync(file.source)
 				if (fileExists === false) return core.warning(`Source ${ file.source } not found`)
 
 				const localDestination = `${ git.workingDir }/${ file.dest }`
+				core.info("Local Destination: " + localDestination)
 
 				const destExists = fs.existsSync(localDestination)
 				if (destExists === true && file.replace === false) return core.warning(`File(s) already exist(s) in destination and 'replace' option is set to false`)
@@ -77,6 +82,14 @@ async function run() {
 				await copy(source, dest, isDirectory, file)
 
 				await git.add(file.dest)
+
+				if (DRY_RUN) {
+					let diff = await git.diff();
+					core.info('Git Diff:')
+					core.info(diff)
+					diffs.push(diff)
+					return
+				}
 
 				// Commit each file separately, if option is set to false commit all files at once later
 				if (COMMIT_EACH_FILE === true) {
@@ -117,9 +130,10 @@ async function run() {
 			if (DRY_RUN) {
 				core.warning('Dry run, no changes will be pushed')
 
-				core.debug('Git Status:')
-				core.debug(await git.status())
-
+				core.info('Git Status:')
+				let status = await git.status();
+				core.info(status)
+				diffs.push(status)
 				return
 			}
 
@@ -206,6 +220,9 @@ async function run() {
 	if (prUrls) {
 		core.setOutput('pull_request_urls', prUrls)
 	}
+	if (diffs) {
+		core.setOutput('git_diff', diffs.join('\n'))
+	}
 
 	if (SKIP_CLEANUP === true) {
 		core.info('Skipping cleanup')
@@ -217,7 +234,7 @@ async function run() {
 }
 
 run()
-	.catch((err) => {
-		core.setFailed(err.message)
-		core.debug(err)
-	})
+		.catch((err) => {
+			core.setFailed(err.message)
+			core.debug(err)
+		})

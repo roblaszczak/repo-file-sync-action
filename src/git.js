@@ -371,6 +371,13 @@ export default class Git {
 			this.workingDir
 		)
 	}
+	
+	async diff() {
+		return execCmd(
+				'git --no-pager diff',
+				this.workingDir
+		)
+	}
 
 	async push() {
 		if (FORK) {
