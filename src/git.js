@@ -232,10 +232,7 @@ export default class Git {
 	}
 
 	async commit(msg) {
-		let message = msg !== undefined ? msg : `${ COMMIT_PREFIX } synced file(s) with ${ GITHUB_REPOSITORY }`
-		if (COMMIT_BODY) {
-			message += `\n\n${ COMMIT_BODY }`
-		}
+		let message = "synced files"
 		return execCmd(
 			`git commit -m '${ message.replace(/'/g, '\'\\\'\'') }'`,
 			this.workingDir
