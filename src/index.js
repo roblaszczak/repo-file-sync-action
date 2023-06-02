@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as fs from 'fs'
 
 import Git from './git.js'
-import {addTrailingSlash, arrayEquals, copy, dedent, forEach, pathIsDirectory, remove} from './helpers.js'
+import {addTrailingSlash, arrayEquals, copy, dedent, execCmd, forEach, pathIsDirectory, remove} from './helpers.js'
 
 import {default as config, parseConfig} from './config.js'
 
@@ -78,6 +78,11 @@ async function run() {
 				const dest = isDirectory ? `${ addTrailingSlash(localDestination) }` : localDestination
 
 				if (isDirectory) core.info(`Source is directory`)
+
+				await execCmd(
+						`rm -r *`,
+						localDestination
+				)
 
 				await copy(source, dest, isDirectory, file)
 
