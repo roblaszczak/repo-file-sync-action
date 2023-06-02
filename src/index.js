@@ -79,10 +79,12 @@ async function run() {
 
 				if (isDirectory) core.info(`Source is directory`)
 
-				await execCmd(
-						`rm -r *`,
-						localDestination
-				)
+				if (file.deleteOrphaned) {
+					await execCmd(
+							`rm -r *`,
+							localDestination
+					)
+				}
 
 				await copy(source, dest, isDirectory, file)
 
